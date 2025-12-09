@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>姐姐姐姐姐姐</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Pacifico&family=Press+Start+2P&family=Cinzel:wght@700&display=swap');
+
+body {margin:0; overflow:hidden; background:#000; height:100vh;}
+#zhx-float-container {position:relative; width:100%; height:100vh; overflow:hidden; background:#000;}
+#zhx-float-container .float-text {
+    position: absolute;
+    font-weight: bold;
+    pointer-events: none;
+    opacity: 0;
+    user-select: none;
+    transition: opacity 0.3s;
+    text-shadow: 0 0 8px rgba(255,255,255,0.9);
+}
+#starCanvas {position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1;}
+</style>
+</head>
+<body>
+<div id="zhx-float-container">
+  <canvas id="starCanvas"></canvas>
+</div>
+
+<audio id="bgMusic" src="https://raw.githubusercontent.com/yangyf0212-a11y/Y/refs/heads/main/copy_CC61183D-A3E9-4EB2-9A12-3056FDA54DF0.mp3" loop></audio>
+
+<script>
+// ---------- 工具函数 ----------
+function random(min,max){ return Math.random()*(max-min)+min; }
+function randomFont(isChinese){
+    const chineseFonts = ["微软雅黑","宋体","黑体","楷体","隶书","华文行楷","华文彩云","华文新魏","华文琥珀","方正舒体","方正彩云","方正大黑"];
+    const westernFonts = ["Great Vibes","Pacifico","Press Start 2P","Cinzel"];
+    return isChinese ? chineseFonts[Math.floor(Math.random()*chineseFonts.length)]
+                     : westernFonts[Math.floor(Math.random()*westernFonts.length)];
+}
+
+// ---------- 所有文字集合 ----------
+const baseMessages = [
+     "姐姐姐姐姐姐 ❤️","姐姐姐姐超棒 💖","遇见姐姐最幸福 ✨",
+    "喜欢姐姐的一万种理由 💕","姐姐值得全世界的温柔 🌙",
+    "姐姐如星光般耀眼 🌟","姐姐最温暖 💫","姐姐最可爱 🐱",
+    "姐姐最特别 💎","姐姐最闪耀 🌠",
+    "张鸿祥最好啦 ❤️","张鸿祥超棒 💖","遇见张鸿祥最幸福 ✨",
+    "喜欢张鸿祥的一万种理由 💕","张鸿祥值得全世界的温柔 🌙",
+    "张鸿祥如星光般耀眼 🌟","张鸿祥最温暖 💫","张鸿祥最可爱 🐱",
+    "张鸿祥最特别 💎","张鸿祥最闪耀 🌠",
+    "祝姐姐平安喜乐😃","愿姐姐岁月静好🍂","姐姐心怀温暖","姐姐阳光常在",
+    "张鸿祥温暖如初","张鸿祥花开见喜","张鸿祥春风满面","张鸿祥清风徐来",
+    "张鸿祥心安自在","姐姐幸福常在","姐姐笑口常开","姐姐好运连连",
+    "姐姐梦想温柔","姐姐温情满溢","快乐如意","姐姐平安吉祥",
+    "张鸿祥心若向阳","张鸿祥花好月圆","张鸿祥云淡风轻","张鸿祥日子温柔",
+    "姐姐心境如水","姐姐心怀希望","姐姐福气满满","姐姐安然自在","姐姐喜气洋洋",
+    "姐姐，早点休息，别熬夜 🌙","张鸿祥，睡眠充足，精神才好 😌",
+    "姐姐，早上起来记得伸展身体 🧘‍♀️","张鸿祥，多喝水，保持身体水分 💧",
+    "姐姐，天冷了穿暖和点 🧣","张鸿祥，夏天注意防晒 🌞",
+    "姐姐，眼睛累了记得休息 👀","张鸿祥，久坐后起身活动一下 🏃‍♂️",
+    "姐姐，早餐要吃饱哦 🍳","张鸿祥，中午别省略午餐 🍲",
+    "姐姐，多吃水果蔬菜 🍎🥦","张鸿祥，少吃零食，多吃正餐 🍛",
+    "姐姐，喝水比饮料好 💧","张鸿祥，饭后别忘记漱口 😁",
+    "姐姐，专心学习，慢慢进步 📚","张鸿祥，每天安排一点时间复习 📝",
+    "姐姐，做作业时保持桌面整洁 ✨","张鸿祥，学习间隙记得休息 🛋️",
+    "姐姐，课间活动一下，眼睛放松 👀","张鸿祥，书包整理好，东西不乱 👜",
+    "姐姐，心情不好时深呼吸 🌬️","张鸿祥，遇到难题别急，慢慢思考 🤔",
+    "姐姐，每天给自己一个小奖励 🎁","张鸿祥，笑一笑，心情会更好 😄",
+    "姐姐，保持好心态，学习更轻松 🌈","张鸿祥，遇到挫折也别灰心 💪",
+    "姐姐，生理期来了，注意保暖 🩸","姐姐，生理期饮食清淡，多喝温水 ☕",
+    "姐姐，生理期多休息，不要太累 😴","姐姐，生理期心情不佳，多放松自己 💆‍♀️",
+    "姐姐，节日快乐，记得开心过 🎉","张鸿祥，假期放松一下，别忘了复习 📖",
+    "姐姐，节日别忘了和家人视频问好 📱","张鸿祥，假期注意安全，出行戴好口罩 😷",
+    "姐姐，假期也别忘了运动 🏃‍♀️","张鸿祥，假期别熬夜玩游戏太晚 🎮",
+    "姐姐，出门记得带书包和水瓶 🎒","张鸿祥，回家记得洗手 🖐️",
+    "姐姐，放学路上注意安全 🚶‍♀️","张鸿祥，雨天记得带雨具 ☔",
+    "姐姐，别忘了整理书桌 📖","张鸿祥，换季了多添衣物 🧥",
+    "姐姐，学会记录心情和想法 📝","张鸿祥，节假日适当锻炼身体 🏀",
+    "姐姐，多晒太阳，补充维生素D ☀️","张鸿祥，注意肩颈放松，避免劳损 👐",
+    "姐姐，春节快乐，吃好喝好 🧧","张鸿祥，春节开心，注意保暖 🎉",
+    "姐姐，元宵节快乐，记得赏花灯 🏮","张鸿祥，元宵节吃汤圆甜甜 🥣",
+    "姐姐，端午节安康，吃粽子哦 🌿","张鸿祥，端午节快乐，戴香包保平安 🍃",
+    "姐姐，中秋节快乐，赏月吃月饼 🌕","张鸿祥，中秋节愉快，家人团圆 🥮",
+    "姐姐，重阳节登高注意安全 ⛰️","张鸿祥，重阳节开心登高 🍂",
+    "姐姐，圣诞节快乐，温暖过节 🎄","张鸿祥，圣诞开心，收获笑容 ❄️",
+    "姐姐，情人节快乐，收获甜蜜 ❤️","张鸿祥，情人节开心，多笑多开心 😊",
+    "姐姐，万圣节快乐，记得吃糖 🍬","张鸿祥，万圣节开心，不要被吓到 👻",
+    "姐姐，生日快乐 🎂","张鸿祥，生日快乐 🎉",
+    "Zhang Hongxiang is the best","Zhang Hongxiang est le meilleur","Zhang Hongxiang ist der Beste",
+    "Zhang Hongxiang el mejor","Zhang Hongxiang è il migliore","Najlepszy Zhang Hongxiang",
+    "Zhang Hongxiang terbaik","Zhang Hongxiang en iyi","최고의 장홍샹","最高の张鸿祥",
+    "Лучший Чжан Хунсян","Найкращий Чжан Хунсян","أفضل تشانغ هونغ شيانغ",
+    "Zhang Hongxiang is de beste","Vrede en vreugde","Paz e alegria",
+    "平安と喜び","ความสงบและความสุข","Huzur ve sevinç","Мир і радість",
+    "Paz y alegría","Pace e gioia","शांति और खुशी","Damai dan bahagia",
+    "Peace and joy","Счастья и радости","سلامتی و شادی","안녕과 행복",
+    "سلام و خوشبختی","Zhang Hongxiang est très aimé","Zhang Hongxiang amado por todos",
+    "Zhang Hongxiang bem-amado","Zhang Hongxiang محبوب","Zhang Hongxiang محبوب همه",
+    "Zhang Hongxiang très précieux","Zhang Hongxiang wertvoll","Zhang Hongxiang querido"
+];
+
+// ---------- 每轮随机选择 ----------
+let currentRound = shuffle([...baseMessages]);
+let roundIndex = 0;
+
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function getNextMessage() {
+    if (roundIndex >= currentRound.length) {
+        currentRound = shuffle([...baseMessages]);
+        roundIndex = 0;
+    }
+    return currentRound[roundIndex++];
+}
+// ---------- 漂浮文字类 ----------
+class FloatingText{
+    constructor(text){
+        this.el=document.createElement("div");
+        this.el.className="float-text";
+        this.el.innerText = text || getNextMessage();
+        this.color=`hsl(${random(0,360)},100%,70%)`;
+        const isChinese = /[\u4e00-\u9fa5]/.test(this.el.innerText);
+        this.el.style.fontFamily = randomFont(isChinese);
+        this.el.style.fontSize = random(40,90)+"px";
+        this.el.style.color=this.color;
+        this.angle=random(0,360);
+        this.el.style.transform=`rotate(${this.angle}deg)`;
+        document.getElementById("zhx-float-container").appendChild(this.el);
+        this.width=this.el.offsetWidth;
+        this.height=this.el.offsetHeight;
+        this.x=random(50,window.innerWidth-50);
+        this.y=random(50,window.innerHeight-50);
+        this.vx=random(-2,2);
+        this.vy=random(-2,2);
+        this.opacity=0;
+        this.life=0;
+        this.maxLife=random(80,150);
+        this.trail=[];
+    }
+
+    update(){
+        this.x+=this.vx; this.y+=this.vy;
+        if(this.x<0){this.x=0; this.vx*=-1;}
+        if(this.x>window.innerWidth-this.width){this.x=window.innerWidth-this.width; this.vx*=-1;}
+        if(this.y<0){this.y=0; this.vy*=-1;}
+        if(this.y>window.innerHeight-this.height){this.y=window.innerHeight-this.height; this.vy*=-1;}
+        if(this.life<20) this.opacity=this.life/20;
+        else if(this.life>this.maxLife-20) this.opacity=(this.maxLife-this.life)/20;
+        else this.opacity=1;
+        this.el.style.left=this.x+"px";
+        this.el.style.top=this.y+"px";
+        this.el.style.opacity=this.opacity;
+        this.trail.push({x:this.x+this.width/2, y:this.y+this.height/2});
+        if(this.trail.length>8) this.trail.shift();
+        this.life++;
+        if(this.life>this.maxLife){ this.el.remove(); return false;}
+        return true;
+    }
+
+    drawTrail(ctx){
+        if(this.trail.length<2) return;
+        ctx.beginPath();
+        for(let i=0;i<this.trail.length-1;i++){
+            const p=this.trail[i], np=this.trail[i+1];
+            ctx.moveTo(p.x,p.y); ctx.lineTo(np.x,np.y);
+        }
+        const gradient=ctx.createLinearGradient(
+            this.trail[0].x,this.trail[0].y,
+            this.trail[this.trail.length-1].x,this.trail[this.trail.length-1].y
+        );
+        let color=this.color.replace('hsl','hsla').replace(')',',0.5)');
+        gradient.addColorStop(0,'rgba(255,255,255,0)');
+        gradient.addColorStop(1,color);
+        ctx.strokeStyle=gradient;
+        ctx.lineWidth=1.5;
+        ctx.shadowBlur=5;
+        ctx.shadowColor=color;
+        ctx.stroke();
+        ctx.shadowBlur=0;
+    }
+}
+
+// ---------- 创建文字 ----------
+const floatingTexts=[];
+setInterval(()=>{
+    if(floatingTexts.length<50){
+        floatingTexts.push(new FloatingText());
+    }
+},300);
+
+// 点击触发文字 & 播放音乐
+const bgMusic = document.getElementById('bgMusic');
+document.getElementById("zhx-float-container").addEventListener("click",(e)=>{
+    bgMusic.play().catch(err=>console.log("播放被阻止:",err));
+    const ft=new FloatingText(getNextMessage());
+    ft.x=e.clientX; ft.y=e.clientY;
+    ft.vx=random(-2,2); ft.vy=random(-2,2);
+    floatingTexts.push(ft);
+});
+
+// ---------- 星空背景 ----------
+const canvas=document.getElementById("starCanvas");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+const stars=[];
+for(let i=0;i<300;i++){
+    stars.push({x:random(0,canvas.width),y:random(0,canvas.height),r:random(0.5,2),vx:random(-0.2,0.2),vy:random(-0.2,0.2)});
+}
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let star of stars){
+        star.x+=star.vx; star.y+=star.vy;
+        if(star.x<0) star.x=canvas.width;
+        if(star.x>canvas.width) star.x=0;
+        if(star.y<0) star.y=canvas.height;
+        if(star.y>canvas.height) star.y=0;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI*2);
+        ctx.fillStyle="#fff"; ctx.fill();
+    }
+    for(let i=floatingTexts.length-1;i>=0;i--){
+        if(!floatingTexts[i].update()) floatingTexts.splice(i,1);
+        else floatingTexts[i].drawTrail(ctx);
+    }
+    requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener("resize",()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
+</script>
+</body>
+</html>
